@@ -97,16 +97,6 @@ while (!gameEnd)
     }
     Console.WriteLine("\n");
 }
-
-
-//for (int i = 0; i < battleshipList.battleships.Count; i++)
-//{
-//    Console.WriteLine(battleshipList.battleships[i].sizeOnGrid);
-//}
-
-
-//alusten koot on x(1<x<n) Jos antaa kooksi 5x5, aluksen mahdollinen koko on 1-5
-
 static int SetUpGameFunction(string message)
 {
     bool success = false;
