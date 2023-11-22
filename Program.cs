@@ -1,14 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
-using static Board;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
+﻿
 int boardSize = 0;
 int shipQtt = 0;
 int battleshipSizeOnGrid = 0;
