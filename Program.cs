@@ -67,8 +67,9 @@ while (!gameEnd)
     command = string.Join(" ", numbers);
     row = numbers[0];
     column = numbers[1];
+    Console.WriteLine("\n\n");
 
-    hit = battleshipList.HitFunction(command);
+   hit = battleshipList.HitFunction(command);
     board.ClearFogOfWarFromCoord(row, column, hit);
 
 
