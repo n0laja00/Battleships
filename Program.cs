@@ -1,4 +1,5 @@
-﻿
+﻿//Following the principle that all CLI app code is in one file
+//Rework idea: Make ClearFogOfWarFromCoord work with string coords instead of ints. This may increase number of lines. 
 int boardSize = 0;
 int shipQtt = 0;
 int battleshipSizeOnGrid = 0;
@@ -156,6 +157,9 @@ static int[] ValidateInputForColumnAndRow(int boardSize)
     }
 }
 
+/// <summary>
+/// Class used for boards.
+/// </summary>
 public class Board()
 {
     int Columns { get; set; }
@@ -172,6 +176,10 @@ public class Board()
         this.LayoutFogOfWar = DrawLayoutFogOfWarFunction();
         this.LayoutFogOfWarShipLocations = new List<List<int>>();
     }
+    /// <summary>
+    /// Draws board for fog of war
+    /// </summary>
+    /// <returns>list of list of strings, grid/returns>
     private List<List<string>> DrawLayoutFogOfWarFunction()
     {
         List<List<string>> board = new List<List<string>>();
@@ -187,6 +195,10 @@ public class Board()
         return board;
     }
 
+    /// <summary>
+    /// Draws layout for board population
+    /// </summary>
+    /// <returns>list of list of strings, grid</returns>
     private List<List<string>> DrawLayoutFunction()
     {
         List<List<string>> board = new List<List<string>>();
@@ -202,6 +214,9 @@ public class Board()
         return board;
     }
 
+    /// <summary>
+    /// prints layout used for randomization. used for debugging.
+    /// </summary>
     public void PrintBoard()
     {
         if (Layout is null)
@@ -216,6 +231,10 @@ public class Board()
         }
 
     }
+
+    /// <summary>
+    /// Prints current fog of war visible to player
+    /// </summary>
     public void PrintFogOfWarBoard()
     {
         if (this.LayoutFogOfWar is null)
@@ -234,6 +253,12 @@ public class Board()
 
     }
 
+    /// <summary>
+    /// Clears fog of war in certain coordinates
+    /// </summary>
+    /// <param name="row"></param>
+    /// <param name="column"></param>
+    /// <param name="hit"></param>
     public void ClearFogOfWarFromCoord(int row, int column, bool hit)
     {
         if (this.LayoutFogOfWar is null)
@@ -261,6 +286,11 @@ public class Board()
         }
     }
 
+    /// <summary>
+    /// Calculates valid placements on the board
+    /// </summary>
+    /// <param name="battleshipList">list of battleships that are to be placed on the board</param>
+    /// <returns>int</returns>
     public int CalculateValidPlacements(BattleshipList battleshipList)
     {
         List<List<string>>? boardToList = DrawLayoutFunction();
@@ -367,7 +397,10 @@ public class Board()
         return validPlacements;
     }
 
-
+    /// <summary>
+    /// Used to populate the board randomly.
+    /// </summary>
+    /// <param name="battleshiplist">List of battleships to be placed on the board</param>
     public void PopulateBoard(BattleshipList battleshiplist)
     {
         Random rnd = new Random();
@@ -573,10 +606,20 @@ public class Board()
     }
 }
 
+/// <summary>
+/// Class record of list of battleships.
+/// </summary>
+/// <param name="battleships"></param>
 public record class BattleshipList(List<Battleship> battleships)
 {
     public BattleshipList() : this(new List<Battleship>()) { }
 
+    /// <summary>
+    /// takes in a string and compares it to coordinates on ships. 
+    /// If coord exists on one of the ships, it takes a hit.
+    /// </summary>
+    /// <param name="coord">string coordinates on board, "row col" "2 1"</param>
+    /// <returns>bool</returns>
     public bool HitFunction(string coord)
     {
         var index = this.battleships.FindIndex(x => x.Coordinates.Contains(coord));
@@ -601,6 +644,9 @@ public record class BattleshipList(List<Battleship> battleships)
 
         }
     }
+    /// <summary>
+    /// Prints remaining battleships with more than 0 hitpoints
+    /// </summary>
     public void printRemainingBattleships()
     {
         int battleshipCount = battleships.Where(s => s.Hitpoints > 0).Count();
@@ -621,6 +667,9 @@ public class Battleship(int sizeOnGrid)
 
     public Battleship() : this(0) { }
 
+    /// <summary>
+    /// Updates health when ship's sizeOnGrid is changed.
+    /// </summary>
     public void UpdateHealthOnSizeChange()
     {
         this.Hitpoints = SizeOnGrid;
