@@ -37,9 +37,6 @@ Console.WriteLine("""
     ////////////////////////////////////////////////
     /// BOARD HAS BEEN SET!                      ///
     ////////////////////////////////////////////////
-    
-
-
     """);
 
 while (!gameEnd)
@@ -56,7 +53,7 @@ while (!gameEnd)
 
     while (!success)
     {
-        numbers = ValidateInput(boardSize);
+        numbers = ValidateInputForColumnAndRow(boardSize);
         if (numbers.Length > 0)
         {
             success = true;
@@ -69,7 +66,7 @@ while (!gameEnd)
     column = numbers[1];
     Console.WriteLine("\n\n");
 
-   hit = battleshipList.HitFunction(command);
+    hit = battleshipList.HitFunction(command);
     board.ClearFogOfWarFromCoord(row, column, hit);
 
 
@@ -120,7 +117,7 @@ static int SetUpGameFunction(string message)
     return number;
 }
 
-static int[] ValidateInput(int boardSize)
+static int[] ValidateInputForColumnAndRow(int boardSize)
 {
     string? command = string.Empty;
     int[] numbers = [];
@@ -340,7 +337,6 @@ public class Board()
                 int continousHorizontal = 0;
                 for (int y = 0; y < boardToList[i].Count(); y++)
                 {
-
                     if (boardToList[i][y] == string.Empty)
                     {
                         horizontalCells.Add(continousHorizontal);
