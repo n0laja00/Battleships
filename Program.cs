@@ -355,7 +355,7 @@ public class Board()
             {
                 if (number >= battleshipList.battleships[battleship].SizeOnGrid)
                 {
-                    for (int i = 0; i < (number / battleshipList.battleships[battleship].SizeOnGrid); i++)
+                    for (int i = 0; i < Math.Floor((decimal)(number / battleshipList.battleships[battleship].SizeOnGrid)); i++)
                     {
                         validPlacements++;
                     }
@@ -384,9 +384,9 @@ public class Board()
 
             foreach (var number in horizontalCells)
             {
-                if (number != 0 && number >= battleshipList.battleships[battleship].SizeOnGrid)
+                if (number > 1 && number >= battleshipList.battleships[battleship].SizeOnGrid)
                 {
-                    for (int i = 0; i < (number / battleshipList.battleships[battleship].SizeOnGrid); i++)
+                    for (int i = 0; i < Math.Floor((decimal)(number / battleshipList.battleships[battleship].SizeOnGrid)); i++)
                     {
                         validPlacements++;
                     }
