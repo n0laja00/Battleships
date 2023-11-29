@@ -18,7 +18,8 @@ Example of a horizontally aligned.
 ![image](https://github.com/n0laja00/Battleships/assets/73889850/616cf890-820e-4ac7-af1f-91e1463bad1f)
 
 When there are no more unknown valid placements left, as in the player knows the locations of all the ships, the player will be informed.
-![image](https://github.com/n0laja00/Battleships/assets/73889850/4a25e0d1-bb79-4163-8635-cb589b5992ee)
+![image](https://github.com/n0laja00/Battleships/assets/73889850/68e87894-eb37-4a6e-a9ff-f5905cbee76c)
+
 
 
 The game will end when there are no more ships left.
