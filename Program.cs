@@ -1,14 +1,14 @@
-﻿//Following the principle that all CLI app code is in one file
-//Rework idea: Make ClearFogOfWarFromCoord work with string coords instead of ints. This may increase number of lines. 
+﻿//Rework idea: Make ClearFogOfWarFromCoord work with string coords instead of ints. This may increase number of lines. 
+using Battleships.Model;
+
 int boardSize = 0;
 int shipQtt = 0;
 int battleshipSizeOnGrid = 0;
 bool gameEnd = false;
-int validPlacements = 0;
+GameState gameState = new GameState();
 Board board;
-
 Random rnd = new Random();
-BattleshipList battleshipList = new BattleshipList([]);
+BattleshipRecord battleshipRecord = new BattleshipRecord([]);
 
 Console.WriteLine("The Mini World of Mini Battleships");
 
@@ -20,7 +20,7 @@ while (boardSize == 0)
 
 while (shipQtt == 0 || shipQtt > boardSize)
 {
-    shipQtt = SetUpGameFunction("How many ships do you want? (you can't have more pieces than the size of your battlefield allows):");
+    shipQtt = SetUpGameFunction("How many ships do you want? (Can't have more than the width of the grid):");
 }
 
 board = new Board(boardSize);
@@ -29,10 +29,10 @@ for (int i = 0; i < shipQtt; i++)
 {
     battleshipSizeOnGrid = rnd.Next(1, boardSize + 1);
     Battleship ship = new Battleship(battleshipSizeOnGrid);
-    battleshipList.battleships.Add(ship);
+    battleshipRecord.battleships.Add(ship);
 }
 
-board.PopulateBoard(battleshipList);
+board.PopulateBoard(battleshipRecord);
 
 Console.WriteLine("""
     ////////////////////////////////////////////////
@@ -43,59 +43,83 @@ Console.WriteLine("""
 while (!gameEnd)
 {
     string? command = string.Empty;
-    bool success = false;
+    List<int> fireTarget = new List<int>();
+    bool success;
+    bool validTargetCell;
     bool hit = false;
-    int column;
-    int row;
     int[] numbers = [];
 
-    board.PrintFogOfWarBoard();
-    Console.WriteLine("\n\n\nCaptain, what row and column would you like to shoot, Captain? (example: 2 3)");
+    //board.PrintBoard();
+    //battleshipRecord.PrintBattleshipListCoords();
 
-    while (!success)
+    board.PrintFogOfWarBoard();
+
+    validTargetCell = false;
+    while (!validTargetCell)
     {
-        numbers = ValidateInputForColumnAndRow(boardSize);
-        if (numbers.Length > 0)
+        Console.WriteLine("\n\n\nCaptain, what row and column would you like to shoot, Captain? (example: 2 3)");
+        success = false;
+        while (!success)
         {
-            success = true;
+            numbers = ValidateInputForRowAndColumn(boardSize);
+            if (numbers.Length > 0)
+            {
+                success = true;
+            }
         }
 
+        validTargetCell = board.validateHit(numbers[0], numbers[1]);
+        if (!validTargetCell)
+        {
+            Console.WriteLine("You've already hit that cell!");
+        }
     }
 
-    command = string.Join(" ", numbers);
-    row = numbers[0];
-    column = numbers[1];
+    fireTarget.Add(numbers[0]);
+    fireTarget.Add(numbers[1]);
+
     Console.WriteLine("\n\n");
 
-    hit = battleshipList.HitFunction(command);
-    board.ClearFogOfWarFromCoord(row, column, hit);
-
-
+    hit = battleshipRecord.HitFunction(fireTarget);
+    board.ClearFogOfWarFromCoord(fireTarget[0], fireTarget[1], hit);
 
     Console.WriteLine(("").PadRight(24, '-'));
     Console.WriteLine("Ships remaining");
-    battleshipList.printRemainingBattleships();
+    battleshipRecord.printRemainingBattleships();
     Console.WriteLine(("").PadRight(24, '-'));
 
     Console.WriteLine("\n");
-    validPlacements = board.CalculateValidPlacements(battleshipList);
-    switch (validPlacements)
+    gameState.ValidPlacements = board.CalculateValidPlacements(battleshipRecord);
+    gameState.NumberOfShips = battleshipRecord.battleships.Where(s => s.Hitpoints > 0).Count();
+    switch (gameState.ValidPlacements)
     {
         case 0:
-            Console.WriteLine("No more ships detected! You won the game!");
-            gameEnd = true;
+            Console.WriteLine("No more valid placements left! You know where they are!");
             break;
         case -1:
             Console.WriteLine("Possible cheating detected!");
-            gameEnd = true;
             break;
         default:
-            Console.WriteLine($"The number of remaining placements is {validPlacements}");
+            Console.WriteLine($"The number of remaining placements is {gameState.ValidPlacements}");
             break;
-
     }
+
+    if (gameState.NumberOfShips == 0)
+    {
+        gameEnd = true;
+        Console.WriteLine("""
+        ////////////////////////////////////////////////
+        /// BOARD HAS BEEN SET!                      ///
+        ////////////////////////////////////////////////
+        """);
+    }
+
     Console.WriteLine("\n");
 }
+
+/// <summary>
+/// Sets up an aspect of the game
+/// </summary>
 static int SetUpGameFunction(string message)
 {
     bool success = false;
@@ -103,7 +127,7 @@ static int SetUpGameFunction(string message)
 
     while (!success)
     {
-        Console.Write(message); //k
+        Console.Write(message);
         success = int.TryParse(Console.ReadLine(), out number);
         if (!success)
         {
@@ -118,7 +142,10 @@ static int SetUpGameFunction(string message)
     return number;
 }
 
-static int[] ValidateInputForColumnAndRow(int boardSize)
+/// <summary>
+/// Validates row and column
+/// </summary>
+static int[] ValidateInputForRowAndColumn(int boardSize)
 {
     string? command = string.Empty;
     int[] numbers = [];
@@ -157,522 +184,8 @@ static int[] ValidateInputForColumnAndRow(int boardSize)
     }
 }
 
-/// <summary>
-/// Class used for boards.
-/// </summary>
-public class Board()
-{
-    int Columns { get; set; }
-    int Rows { get; set; }
-    List<List<string>>? Layout { get; set; }
-    List<List<string>>? LayoutFogOfWar { get; set; }
-    List<List<int>>? LayoutFogOfWarShipLocations { get; set; }
-
-    public Board(int sizeOfBoard) : this()
-    {
-        this.Columns = sizeOfBoard;
-        this.Rows = sizeOfBoard;
-        this.Layout = DrawLayoutFunction();
-        this.LayoutFogOfWar = DrawLayoutFogOfWarFunction();
-        this.LayoutFogOfWarShipLocations = new List<List<int>>();
-    }
-    /// <summary>
-    /// Draws board for fog of war
-    /// </summary>
-    /// <returns>list of list of strings, grid/returns>
-    private List<List<string>> DrawLayoutFogOfWarFunction()
-    {
-        List<List<string>> board = new List<List<string>>();
-        for (int i = 0; i < Rows; i++)
-        {
-            List<string> row = new List<string>();
-            for (int y = 0; y < Columns; y++)
-            {
-                row.Add(".");
-            }
-            board.Add(row);
-        }
-        return board;
-    }
-
-    /// <summary>
-    /// Draws layout for board population
-    /// </summary>
-    /// <returns>list of list of strings, grid</returns>
-    private List<List<string>> DrawLayoutFunction()
-    {
-        List<List<string>> board = new List<List<string>>();
-        for (int i = 0; i < Rows; i++)
-        {
-            List<string> row = new List<string>();
-            for (int y = 0; y < Columns; y++)
-            {
-                row.Add($"{i} {y}");
-            }
-            board.Add(row);
-        }
-        return board;
-    }
-
-    /// <summary>
-    /// prints layout used for randomization. used for debugging.
-    /// </summary>
-    public void PrintBoard()
-    {
-        if (Layout is null)
-        {
-            return;
-        }
-
-        for (int y = 0; y < Rows; y++)
-        {
-            Console.Write($"{y + 1}: ");
-            Console.WriteLine(string.Join("|", Layout[y]));
-        }
-
-    }
-
-    /// <summary>
-    /// Prints current fog of war visible to player
-    /// </summary>
-    public void PrintFogOfWarBoard()
-    {
-        if (this.LayoutFogOfWar is null)
-        {
-            return;
-        }
-
-        Console.WriteLine("This is what the board looks like...");
-
-        for (int y = 0; y < Rows; y++)
-        {
-            Console.Write($"|{y + 1} : ");
-            Console.Write(string.Join("", this.LayoutFogOfWar[y]));
-            Console.WriteLine("|");
-        }
-
-    }
-
-    /// <summary>
-    /// Clears fog of war in certain coordinates
-    /// </summary>
-    /// <param name="row"></param>
-    /// <param name="column"></param>
-    /// <param name="hit"></param>
-    public void ClearFogOfWarFromCoord(int row, int column, bool hit)
-    {
-        if (this.LayoutFogOfWar is null)
-        {
-            return;
-        }
-
-        if (this.LayoutFogOfWarShipLocations is null)
-        {
-            return;
-        }
 
 
-        if (hit)
-        {
-            this.LayoutFogOfWar[row][column] = "O";
 
 
-            this.LayoutFogOfWarShipLocations.Add(new List<int> { row, column });
 
-        }
-        else
-        {
-            this.LayoutFogOfWar[row][column] = "X";
-        }
-    }
-
-    /// <summary>
-    /// Calculates valid placements on the board
-    /// </summary>
-    /// <param name="battleshipList">list of battleships that are to be placed on the board</param>
-    /// <returns>int</returns>
-    public int CalculateValidPlacements(BattleshipList battleshipList)
-    {
-        List<List<string>>? boardToList = DrawLayoutFunction();
-        string[][]? FogOfWarToArray = LayoutFogOfWar?.Select(a => a.ToArray()).ToArray();
-
-        int validPlacements = 0;
-        int HitsInFogOfWar = 0;
-
-        if (FogOfWarToArray is null)
-        {
-            return -1;
-        }
-
-        for (int i = 0; i < FogOfWarToArray.Count(); i++)
-        {
-            for (int y = 0; y < FogOfWarToArray[i].Count(); y++)
-            {
-                if (FogOfWarToArray[i][y].Contains("O"))
-                {
-                    HitsInFogOfWar++;
-                    boardToList[i][y] = string.Empty;
-                }
-                if (FogOfWarToArray[i][y].Contains("X"))
-                {
-                    boardToList[i][y] = string.Empty;
-                }
-            }
-        }
-
-
-        int battleshipCount = battleshipList.battleships.Where(s => s.Hitpoints > 0).Count();
-
-        if (battleshipCount == 0)
-        {
-            return 0;
-        }
-
-        for (int battleship = 0; battleship < battleshipCount; battleship++)
-        {
-            List<int> verticalCells = new List<int>();
-            List<int> horizontalCells = new List<int>();
-
-            for (int i = 0; i < boardToList.Count(); i++)
-            {
-                int continousVertical = 0;
-                for (int y = 0; y < boardToList[i].Count(); y++)
-                {
-                    if (boardToList[y][i] == string.Empty)
-                    {
-                        verticalCells.Add(continousVertical);
-                        continousVertical = 0;
-                    }
-                    else
-                    {
-                        continousVertical++;
-                    }
-                }
-                verticalCells.Add(continousVertical);
-            }
-
-            foreach (var number in verticalCells)
-            {
-                if (number >= battleshipList.battleships[battleship].SizeOnGrid)
-                {
-                    for (int i = 0; i < Math.Floor((decimal)(number / battleshipList.battleships[battleship].SizeOnGrid)); i++)
-                    {
-                        validPlacements++;
-                    }
-                }
-            }
-
-            for (int i = 0; i < boardToList.Count(); i++)
-            {
-                int continousHorizontal = 0;
-                for (int y = 0; y < boardToList[i].Count(); y++)
-                {
-                    if (boardToList[i][y] == string.Empty)
-                    {
-                        horizontalCells.Add(continousHorizontal);
-                        continousHorizontal = 0;
-                    }
-                    else
-                    {
-                        continousHorizontal++;
-                    }
-
-                    horizontalCells.Add(continousHorizontal);
-
-                }
-            }
-
-            foreach (var number in horizontalCells)
-            {
-                if (number > 1 && number >= battleshipList.battleships[battleship].SizeOnGrid)
-                {
-                    for (int i = 0; i < Math.Floor((decimal)(number / battleshipList.battleships[battleship].SizeOnGrid)); i++)
-                    {
-                        validPlacements++;
-                    }
-                }
-            }
-        }
-
-        return validPlacements;
-    }
-
-    /// <summary>
-    /// Used to populate the board randomly.
-    /// </summary>
-    /// <param name="battleshiplist">List of battleships to be placed on the board</param>
-    public void PopulateBoard(BattleshipList battleshiplist)
-    {
-        Random rnd = new Random();
-        bool success = false;
-        bool locationRandomizationSuccess = false;
-        int shipLocationColumn;
-        int shipLocationRow;
-
-        if (Layout is null)
-        {
-            return;
-        }
-
-        while (!success)
-        {
-            for (int i = 0; i < battleshiplist.battleships.Count(); i++)
-            {
-                locationRandomizationSuccess = false;
-
-                while (!locationRandomizationSuccess)
-                {
-                    List<List<string>> randomizerLayout = Layout
-                        .Where(subList => subList.Any(item => item != string.Empty))
-                        .ToList();
-
-                    shipLocationRow = rnd.Next(0, randomizerLayout.Count);
-                    shipLocationColumn = rnd.Next(0, randomizerLayout[shipLocationRow].Count);
-
-                    bool fitsRight = false;
-                    bool fitsLeft = false;
-                    bool fitsTop = false;
-                    bool fitsBottom = false;
-                    List<int> orientation = new List<int>();
-                    int randomOrientation;
-
-                    if (!randomizerLayout[shipLocationRow][shipLocationColumn].Contains(string.Empty))
-                    {
-                        continue;
-                    }
-
-                    if ((randomizerLayout[shipLocationRow].Count() - shipLocationColumn) > battleshiplist.battleships[i].SizeOnGrid)
-                    {
-                        for (int y = 0; y < battleshiplist.battleships[i].SizeOnGrid; y++)
-                        {
-                            if (randomizerLayout[shipLocationRow][shipLocationColumn + y] == string.Empty)
-                            {
-                                fitsRight = false;
-
-                                break;
-                            }
-                            else
-                            {
-                                fitsRight = true;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        fitsRight = false;
-                    }
-
-                    if (shipLocationColumn >= battleshiplist.battleships[i].SizeOnGrid)
-                    {
-                        for (int y = 0; y < battleshiplist.battleships[i].SizeOnGrid; y++)
-                        {
-                            if (randomizerLayout[shipLocationRow][shipLocationColumn - y] == string.Empty)
-                            {
-                                fitsLeft = false;
-
-                                break;
-                            }
-                            else
-                            {
-                                fitsLeft = true;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        fitsLeft = false;
-                    }
-
-                    if (shipLocationRow >= battleshiplist.battleships[i].SizeOnGrid)
-                    {
-                        for (int y = 0; y < battleshiplist.battleships[i].SizeOnGrid; y++)
-                        {
-                            if (randomizerLayout[shipLocationRow - y][shipLocationColumn] == string.Empty)
-                            {
-                                fitsTop = false;
-
-                                break;
-                            }
-                            else
-                            {
-                                fitsTop = true;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        fitsTop = false;
-                    }
-
-                    if ((randomizerLayout[shipLocationRow].Count() - shipLocationRow) > battleshiplist.battleships[i].SizeOnGrid)
-                    {
-                        for (int y = 0; y < battleshiplist.battleships[i].SizeOnGrid; y++)
-                        {
-                            if (randomizerLayout[shipLocationRow + y][shipLocationColumn] == string.Empty)
-                            {
-                                fitsBottom = false;
-                                break;
-                            }
-                            else
-                            {
-                                fitsBottom = true;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        fitsBottom = false;
-                    }
-
-
-                    if (fitsRight)
-                    {
-                        orientation.Add(1);
-                    }
-                    if (fitsLeft)
-                    {
-                        orientation.Add(2);
-                    }
-                    if (fitsTop)
-                    {
-                        orientation.Add(3);
-                    }
-                    if (fitsBottom)
-                    {
-                        orientation.Add(4);
-                    }
-
-                    if (orientation.Count > 0)
-                    {
-                        var index = new Random().Next(0, orientation.Count());
-                        randomOrientation = orientation[index];
-                        switch (randomOrientation)
-                        {
-                            //right
-                            case 1:
-                                for (int y = 0; y < battleshiplist.battleships[i].SizeOnGrid; y++)
-                                {
-                                    this.Layout[shipLocationRow][shipLocationColumn + y] = string.Empty;
-                                    battleshiplist.battleships[i].Coordinates.Add(shipLocationRow.ToString() + " " + (shipLocationColumn + y).ToString());
-                                }
-                                locationRandomizationSuccess = true;
-
-                                break;
-                            //left
-                            case 2:
-                                for (int y = 0; y < battleshiplist.battleships[i].SizeOnGrid; y++)
-                                {
-                                    this.Layout[shipLocationRow][shipLocationColumn - y] = string.Empty;
-                                    battleshiplist.battleships[i].Coordinates.Add(shipLocationRow.ToString() + " " + (shipLocationColumn + y).ToString());
-                                }
-                                locationRandomizationSuccess = true;
-
-                                break;
-                            //top
-                            case 3:
-                                for (int y = 0; y < battleshiplist.battleships[i].SizeOnGrid; y++)
-                                {
-                                    this.Layout[shipLocationRow - y][shipLocationColumn] = string.Empty;
-                                    battleshiplist.battleships[i].Coordinates.Add((shipLocationRow - y).ToString() + " " + shipLocationColumn.ToString());
-                                }
-                                locationRandomizationSuccess = true;
-
-                                break;
-                            //bottom
-                            case 4:
-                                for (int y = 0; y < battleshiplist.battleships[i].SizeOnGrid; y++)
-                                {
-                                    this.Layout[shipLocationRow + y][shipLocationColumn] = string.Empty;
-                                    battleshiplist.battleships[i].Coordinates.Add((shipLocationRow + y).ToString() + " " + shipLocationColumn.ToString());
-                                }
-                                locationRandomizationSuccess = true;
-
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        if (battleshiplist.battleships[i].SizeOnGrid > 1)
-                        {
-                            battleshiplist.battleships[i].SizeOnGrid--;
-                            battleshiplist.battleships[i].UpdateHealthOnSizeChange();
-                        }
-
-                    }
-                }
-            }
-            success = true;
-        }
-    }
-}
-
-/// <summary>
-/// Class record of list of battleships.
-/// </summary>
-/// <param name="battleships"></param>
-public record class BattleshipList(List<Battleship> battleships)
-{
-    public BattleshipList() : this(new List<Battleship>()) { }
-
-    /// <summary>
-    /// takes in a string and compares it to coordinates on ships. 
-    /// If coord exists on one of the ships, it takes a hit.
-    /// </summary>
-    /// <param name="coord">string coordinates on board, "row col" "2 1"</param>
-    /// <returns>bool</returns>
-    public bool HitFunction(string coord)
-    {
-        var index = this.battleships.FindIndex(x => x.Coordinates.Contains(coord));
-        if (index == -1)
-        {
-            Console.WriteLine("Miss!!");
-            return false;
-        }
-        else
-        {
-            battleships[index].Hitpoints = battleships[index].Hitpoints - 1;
-            if (battleships[index].Hitpoints == 0)
-            {
-                Console.WriteLine("You sunk my battleship!!");
-                return true;
-            }
-            else
-            {
-                Console.WriteLine("Hit!!");
-                return true;
-            }
-
-        }
-    }
-    /// <summary>
-    /// Prints remaining battleships with more than 0 hitpoints
-    /// </summary>
-    public void printRemainingBattleships()
-    {
-        int battleshipCount = battleships.Where(s => s.Hitpoints > 0).Count();
-
-        for (int i = 0; i < battleshipCount; i++)
-        {
-            Console.WriteLine(battleships[i].SizeOnGrid.ToString());
-        }
-    }
-
-}
-
-public class Battleship(int sizeOnGrid)
-{
-    public int SizeOnGrid { get; set; } = sizeOnGrid;
-    public int Hitpoints { get; set; } = sizeOnGrid;
-    public List<string> Coordinates { get; set; } = new List<string>();
-
-    public Battleship() : this(0) { }
-
-    /// <summary>
-    /// Updates health when ship's sizeOnGrid is changed.
-    /// </summary>
-    public void UpdateHealthOnSizeChange()
-    {
-        this.Hitpoints = SizeOnGrid;
-    }
-
-}
