@@ -109,7 +109,7 @@ while (!gameEnd)
         gameEnd = true;
         Console.WriteLine("""
         ////////////////////////////////////////////////
-        /// BOARD HAS BEEN SET!                      ///
+        /// You beat the game!!!                     ///
         ////////////////////////////////////////////////
         """);
     }

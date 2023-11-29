@@ -168,6 +168,7 @@ public class Board()
         }
 
         int battleshipCount = battleshipList.battleships.Where(s => s.Hitpoints > 0).Count();
+        List<Battleship> battleshipsRemaining = battleshipList.battleships.FindAll(s => s.Hitpoints > 0);
 
         if (battleshipCount == 0)
         {
@@ -191,57 +192,62 @@ public class Board()
         }
 
 
-        for (int battleship = 0; battleship < battleshipList.battleships.Count(); battleship++)
+        for (int battleship = 0; battleship < battleshipCount; battleship++)
         {
             List<int> verticalCells = new List<int>();
             List<int> horizontalCells = new List<int>();
-            Battleship currentBattleship = battleshipList.battleships[battleship];
+            Battleship currentBattleship = battleshipsRemaining[battleship];
             int[] coordinatesIntArr;
+            bool isRevealed = false;
+            bool isDamaged = false;
             bool isVertical;
             bool isHorizontal;
 
-            if (currentBattleship.Hitpoints < 1)
+            if (currentBattleship.Hitpoints < (currentBattleship.SizeOnGrid - 1))
             {
-                continue;
+                isRevealed = true;
             }
 
-            //If battleship has less than full HP, we iterate over its coordinates and find where it was hit. 
-            if (currentBattleship.Hitpoints != currentBattleship.SizeOnGrid)
+            if (currentBattleship.Hitpoints < currentBattleship.SizeOnGrid)
             {
-                if (currentBattleship.Hitpoints == (currentBattleship.SizeOnGrid - 2))
+                isDamaged = true;
+            }
+
+            if (!isRevealed && isDamaged && currentBattleship.SizeOnGrid > 1)
+            {
+                for (int i = 0; i < currentBattleship.Coordinates.Count(); i++)
                 {
-                    coordinatesIntArr = currentBattleship.Coordinates[0].ToArray();
-                    isVertical = currentBattleship.Coordinates.All(s => s[0].Equals(coordinatesIntArr[0]));
-                    isHorizontal = currentBattleship.Coordinates.All(s => s[1].Equals(coordinatesIntArr[1]));
-
-                    if (isVertical)
+                    coordinatesIntArr = currentBattleship.Coordinates[i].ToArray();
+                    if (LayoutFogOfWar[coordinatesIntArr[0], coordinatesIntArr[1]] == ("O"))
                     {
-                        Console.WriteLine("The ship is vertical!");
-                    }
-
-                    if (isHorizontal)
-                    {
-                        Console.WriteLine("The ship is Horizontal!");
-                    }
-                }
-
-                if (currentBattleship.Hitpoints == (currentBattleship.SizeOnGrid - 1))
-                {
-                    for (int i = 0; i < currentBattleship.Coordinates.Count(); i++)
-                    {
-                        coordinatesIntArr = currentBattleship.Coordinates[i].ToArray();
-                        if (LayoutFogOfWar[coordinatesIntArr[0], coordinatesIntArr[1]] == ("O"))
+                        List<int> orientations = ViableOrientationsChecker(boardForValidPlacements, currentBattleship, coordinatesIntArr[0], coordinatesIntArr[1]);
+                        for (int y = 0; y < orientations.Count(); y++)
                         {
-                            List<int> orientations = ViableOrientationsChecker(boardForValidPlacements, currentBattleship, coordinatesIntArr[0], coordinatesIntArr[1]);
-                            for (int y = 0; y < orientations.Count(); y++)
-                            {
-                                validPlacements++;
-                            }
+                            validPlacements++;
                         }
                     }
                 }
-            } //else the battleship's location remains a mystery.
-            else
+            }
+
+            if (isRevealed && currentBattleship.SizeOnGrid > 1)
+            {
+                coordinatesIntArr = currentBattleship.Coordinates[0].ToArray();
+                isVertical = currentBattleship.Coordinates.All(s => s[1].Equals(coordinatesIntArr[1]));
+                isHorizontal = currentBattleship.Coordinates.All(s => s[0].Equals(coordinatesIntArr[0]));
+
+                if (isVertical)
+                {
+                    Console.WriteLine("One ship is vertical!");
+                }
+
+                if (isHorizontal)
+                {
+                    Console.WriteLine("One ship is Horizontal!");
+                }
+            }
+
+
+            if (!isRevealed && !isDamaged)
             {
                 for (int i = 0; i < boardForValidPlacements.GetLength(0); i++)
                 {
