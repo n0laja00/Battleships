@@ -19,7 +19,8 @@ Example of a Vertically aligned.
 
 
 When there are no more unknown valid placements left, as in the player knows the locations of all the ships, the player will be informed.
-![image](https://github.com/n0laja00/Battleships/assets/73889850/68e87894-eb37-4a6e-a9ff-f5905cbee76c)
+![image](https://github.com/n0laja00/Battleships/assets/73889850/ccd4310a-0b30-45a5-8dcb-eb7e3b546f12)
+
 
 
 
