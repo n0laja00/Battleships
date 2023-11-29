@@ -3,9 +3,9 @@ A game of Battleships made with c#!
 
 ## Features
 
--[x] choose the size of the board (1 - 5 grid)
--[x] choose a number of ships (1 - size of the board)
--[x] ships are randomly placed on the board with a random orientation
+- [x] choose the size of the board (1 - 5 grid)
+- [x] choose a number of ships (1 - size of the board)
+- [x] ships are randomly placed on the board with a random orientation
 ![image](https://github.com/n0laja00/Battleships/assets/73889850/eb522cea-4644-453a-bd36-32004cdef500)
 
 ### Run through
