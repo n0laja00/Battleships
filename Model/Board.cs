@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Battleships.Model;
 
@@ -244,6 +245,16 @@ public class Board()
                 {
                     Console.WriteLine("One ship is Horizontal!");
                 }
+
+                for (int y = 0; y < currentBattleship.Coordinates.Count(); y++)
+                {
+                    for (int x = 0; x < currentBattleship.Coordinates[y].Count(); x++)
+                    {
+                        int row = currentBattleship.Coordinates[y][0];
+                        int column = currentBattleship.Coordinates[y][1];
+                        boardForValidPlacements[row, column] = string.Empty;
+                    }
+                }
             }
 
 
@@ -297,8 +308,6 @@ public class Board()
                 }
             }
 
-
-
             foreach (var number in horizontalCells)
             {
                 if (number > 1 && number >= currentBattleship.SizeOnGrid)
@@ -310,7 +319,18 @@ public class Board()
                 }
             }
 
+            if (currentBattleship.SizeOnGrid == 1)
+            {
+                for (int y = 0; y < boardForValidPlacements.GetLength(0); y++)
+                {
+                    for (int x = 0; x < boardForValidPlacements.GetLength(1); x++)
+                    {
+                        validPlacements++;
+                    }
+                }
+            }
         }
+
         return validPlacements;
     }
 
@@ -413,12 +433,7 @@ public class Board()
                     }
                     else
                     {
-                        if (battleshipList.battleships[i].SizeOnGrid > 1)
-                        {
-                            battleshipList.battleships[i].SizeOnGrid--;
-                            battleshipList.battleships[i].UpdateHealthOnSizeChange();
-                        }
-
+                        battleshipList.battleships[i].DecreaseHealthAndOnSizeChange();
                     }
                 }
             }

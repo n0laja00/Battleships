@@ -58,11 +58,11 @@ public record class BattleshipRecord(List<Battleship> battleships)
     /// </summary>
     public void printRemainingBattleships()
     {
-        int battleshipCount = battleships.Where(s => s.Hitpoints > 0).Count();
+        List<Battleship> remainingBattleships = battleships.FindAll(s => s.Hitpoints > 0);
 
-        for (int i = 0; i < battleshipCount; i++)
+        for (int i = 0; i < remainingBattleships.Count(); i++)
         {
-            Console.WriteLine(battleships[i].SizeOnGrid.ToString());
+            Console.WriteLine(remainingBattleships[i].SizeOnGrid.ToString());
         }
     }
 

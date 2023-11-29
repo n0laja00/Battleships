@@ -11,9 +11,10 @@ public class Battleship(int sizeOnGrid)
     /// <summary>
     /// Updates health when ship's sizeOnGrid is changed.
     /// </summary>
-    public void UpdateHealthOnSizeChange()
+    public void DecreaseHealthAndOnSizeChange()
     {
-        this.Hitpoints = SizeOnGrid;
+        this.SizeOnGrid--;
+        this.Hitpoints--;
     }
 
     public void printshipcoord()
@@ -22,7 +23,7 @@ public class Battleship(int sizeOnGrid)
         {
             foreach (var number in coord)
             {
-                Console.Write($"{number}|\t");
+                Console.Write($"{number + 1}|\t");
             }
             Console.WriteLine();
         }

@@ -50,7 +50,8 @@ while (!gameEnd)
     int[] numbers = [];
 
     //board.PrintBoard();
-    //battleshipRecord.PrintBattleshipListCoords();
+    battleshipRecord.printRemainingBattleships();
+    battleshipRecord.PrintBattleshipListCoords();
 
     board.PrintFogOfWarBoard();
 
